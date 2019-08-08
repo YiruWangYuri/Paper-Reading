@@ -1,0 +1,18 @@
+### 本篇文章的SectionVII部分撰写的related work部分，虽然review的不全面，但是在其分类下列出的参考文献比较全面。可以按照顺序看一下。
+
+1. 研究问题的意义在于：空间感知在机器人领域的应用，robotic application，例如定位、建图、点云配准、相对位姿估计。
+2. 科学问题在于，outlier的存在，或者失败![](http://latex.codecogs.com/gif.latex?\\rightarrow) Ransac/robust estimation，或者指数上升的时间复杂度 ![](http://latex.codecogs.com/gif.latex?\\rightarrow)  BnB。
+3. 本文致力于outlier rejection，其贡献为3点。
+    + 即使是一个线性的outlier rejection问题也是不可近似的：在worst-case，在类多项式时间内求得有效求得近似解，cannot design。
+    + the first per-instance sub-optimality bounds to assess the approximation quality of a given outlier rejection outcome. 评估得出的结果与最优解之间的距离，给出该距离的bound，即该距离不会大于这个bound。
+    + 提出一种通用算法：adaptive trimming，目的outlier rejection，对outlier鲁棒，**通用算法**，因为领域中已经用一些优化方式将robust estimation、outlier剔除问题做成一个通用的模式，而不考虑具体、特定的应用，具有异质性的，M-估计，最大一致集方法。**利用了最近提出的能求解outlier-free问题的global solvers**，其实文章是给了问题的通用建模，然后一个outlier robust的优化框架，其中的优化细节由这些现成的global slovers给出，但处理不了outlier，例如参考文献6.7.8。**在本领域中，其实还缺少对于可证明的鲁棒方法，本文进行填补**。
+4. **看文章的算法本质是什么？**
+    + 是一种outlier reject的思想，用最多的inlier来估计模型的参数--》排除最少的outlier--》优秀的参数：做到，尽可能多的，解释观测点--》把outlier按步长一步步剔除。
+
+   在第![](http://latex.codecogs.com/gif.latex?\$k$)次迭代：
+    1. 已经获得了剔除了某![](http://latex.codecogs.com/gif.latex?\$k-1$)轮的点集，用这些潜在的inliers+global slovers求解模型![](http://latex.codecogs.com/gif.latex?\$x$)。
+    2. 关于**所有的点**和当前模型![](http://latex.codecogs.com/gif.latex?\$x$)计算残差，获取前![](http://latex.codecogs.com/gif.latex?\$g$)个最大的残差。
+    3. ![](http://latex.codecogs.com/gif.latex?\$g$)个残差中大于inlier阈值![](http://latex.codecogs.com/gif.latex?\\sigma)的，作为某![](http://latex.codecogs.com/gif.latex?\$k$)轮剔除的点集。如果发现![](http://latex.codecogs.com/gif.latex?\{k-1,k})轮剔除的点集不变，注意这里不仅仅指示剔除点集的个数不变，![](http://latex.codecogs.com/gif.latex?\\sigma=\gamma*\sigma,\gamma<1)。    
+    3. 剔除离群点的![](http://latex.codecogs.com/gif.latex?\$g$)进行步长更新![](http://latex.codecogs.com/gif.latex?\{g=g+\bar{g}})。
+    4. 停止条件：如果发现剩余的inlier数量=估计参数需要的最小点数数量，停止。
+    5. 停止条件：如果发现连续两次 inlier残差之和收敛【相邻两次迭代，用估计的![](http://latex.codecogs.com/gif.latex?\$x$)计算inlier下的残差的![](http://latex.codecogs.com/gif.latex?\L_2)距离，认为是一次收敛，这样的收敛要进行两次】，停止。
